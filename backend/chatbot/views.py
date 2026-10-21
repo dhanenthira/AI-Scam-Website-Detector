@@ -38,12 +38,18 @@ class ChatbotQueryView(APIView):
         message = serializer.validated_data['message']
 
         # Retrieve scan record
-        try:
-            scan_record = WebsiteScan.objects.get(pk=scan_id)
-        except WebsiteScan.DoesNotExist:
+        scan_record = WebsiteScan.objects.filter(pk=scan_id).first()
+        if not scan_record:
+            # Fallback to the user's latest scan, or the most recent system scan
+            if request.user.is_authenticated:
+                scan_record = WebsiteScan.objects.filter(user=request.user).order_by('-created_at').first()
+            if not scan_record:
+                scan_record = WebsiteScan.objects.order_by('-created_at').first()
+
+        if not scan_record:
             return Response(
-                {"error": f"Scan record with ID {scan_id} not found."},
-                status=status.HTTP_404_NOT_FOUND
+                {"answer": "No scan reports are available yet. Please scan a website first using the scanner tab, and I'll analyze its security details for you!"},
+                status=status.HTTP_200_OK
             )
 
         # If scan has an owner and requester is an authenticated user that does not match

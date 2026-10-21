@@ -18,6 +18,11 @@ from .serializers import (
 from .services import run_full_scan
 
 
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 class ScanWebsiteView(APIView):
     """
     Initiate a website scan.
@@ -46,11 +51,15 @@ class ScanWebsiteView(APIView):
         url = serializer.validated_data['url']
         user = request.user if request.user.is_authenticated else None
 
+        logger.info("Received website scan request: %s", url)
+
         try:
             scan_data = run_full_scan(url, user=user)
         except ValueError as exc:
+            logger.warning("Scan rejected for '%s': %s", url, exc)
             return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as exc:
+            logger.error("Scan processing error for '%s': %s", url, exc, exc_info=True)
             return Response(
                 {"error": f"Failed to complete scan: {str(exc)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR

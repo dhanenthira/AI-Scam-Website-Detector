@@ -110,8 +110,24 @@ def validate_url(url: str) -> tuple[bool, str, str | None]:
         if not ips:
             return False, "", "Could not resolve domain IP address."
 
+        NAT64_PREFIX = ipaddress.ip_network('64:ff9b::/96')
         for ip_str in ips:
             ip = ipaddress.ip_address(ip_str)
+
+            # Support RFC 6052 NAT64 / DNS64 IPv4-IPv6 translation (common on mobile/IPv6 ISPs)
+            if ip.version == 6 and ip in NAT64_PREFIX:
+                embedded_ipv4 = ipaddress.ip_address(ip.packed[-4:])
+                if (
+                    embedded_ipv4.is_private
+                    or embedded_ipv4.is_loopback
+                    or embedded_ipv4.is_reserved
+                    or embedded_ipv4.is_link_local
+                    or embedded_ipv4.is_multicast
+                    or str(embedded_ipv4) == '169.254.169.254'
+                ):
+                    return False, "", f"Access to private/internal IP address ({embedded_ipv4}) is prohibited."
+                continue
+
             if (
                 ip.is_private
                 or ip.is_loopback
