@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   Shield, Search, CheckCircle2, ArrowRight, AlertTriangle, Lock,
   Globe, Zap, Bot, BarChart3, FileSearch, MessageSquareText, History,
-  ShieldCheck, ShieldAlert
+  ShieldCheck, ShieldAlert, Sparkles
 } from 'lucide-react';
 
 export default function LandingPage({ user, onOpenAuth, onGoToDashboard }) {

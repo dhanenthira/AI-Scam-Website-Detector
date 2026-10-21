@@ -68,6 +68,10 @@ export async function apiChatWithAI(scanId, message) {
       body: JSON.stringify({ scan_id: scanId, message }),
     });
 
+    if (res.status === 401) {
+      clearTokens();
+    }
+
     const data = await res.json();
     if (!res.ok) {
       throw new Error(data.error || 'Failed to get answer from AI.');
@@ -85,6 +89,9 @@ export async function apiGetScanHistory() {
     const res = await fetch(`${API_BASE_URL}/scanner/history/`, {
       headers: getHeaders(true),
     });
+    if (res.status === 401) {
+      clearTokens();
+    }
     if (!res.ok) {
       throw new Error('Could not fetch scan history.');
     }

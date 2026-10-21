@@ -25,32 +25,35 @@ export default function App() {
 
   // Triggered when a scan is initiated anywhere in the UI
   const handleInitiateScan = async (url) => {
-    if (!user) {
-      setAuthMode('login');
-      setAuthModalOpen(true);
-      return;
-    }
-
     setScanError(null);
     setTargetUrl(url);
     setIsScanning(true);
 
     try {
-      // Initiate background API call to Django REST backend
-      const scanPromise = apiScanWebsite(url);
+      // Run scan API call in parallel with smooth progress animation delay
+      const [resultData] = await Promise.all([
+        apiScanWebsite(url),
+        new Promise((resolve) => setTimeout(resolve, 2200))
+      ]);
 
-      // Scanning animation runs simultaneously for realistic visual feedback
-      const resultData = await scanPromise;
-      setCurrentScan(resultData);
+      if (resultData && !resultData.error) {
+        setCurrentScan(resultData);
+        setIsScanning(false);
+        setActiveTab('result');
+      } else {
+        throw new Error(resultData?.error || 'Unable to analyze this website.');
+      }
     } catch (err) {
+      console.error('Scan error:', err);
       setScanError(err.message || 'Unable to analyze this website.');
+      setIsScanning(false);
     }
   };
 
-  // Called when the progress checklist finishes
+  // Fallback handler if animation completes
   const handleScanAnimationComplete = () => {
-    setIsScanning(false);
-    if (!scanError && currentScan) {
+    if (currentScan) {
+      setIsScanning(false);
       setActiveTab('result');
     }
   };

@@ -23,14 +23,12 @@ export default function ScanningAnimation({ url, onComplete }) {
           setProgress(Math.round(((next + 1) / steps.length) * 100));
           return next;
         } else {
+          setProgress(95);
           clearInterval(timer);
-          setTimeout(() => {
-            if (onComplete) onComplete();
-          }, 400);
           return prev;
         }
       });
-    }, 450);
+    }, 400);
 
     return () => clearInterval(timer);
   }, []);
